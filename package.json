@@ -1,26 +1,40 @@
 {
-  "name": "plug-and-play-trading-temp",
+  "name": "plug-and-play-trading",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "NODE_ENV=production node server.js",
+    "lint": "next lint",
+    "seed": "npx tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "next": "14.2.35",
+    "next-auth": "^4.24.13",
+    "prisma": "^5.22.0",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.35"
+    "sharp": "^0.34.5",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.35"
+    "tsx": "^4.21.0",
+    "typescript": "^5"
   }
 }
