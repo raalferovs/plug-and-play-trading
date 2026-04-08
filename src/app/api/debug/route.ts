@@ -1,16 +1,22 @@
 import { NextResponse } from "next/server";
+import { getStripe } from "@/lib/stripe";
 
 export async function GET() {
+  // Test actual Stripe connection
+  let stripeTest = "not tested";
+  try {
+    const balance = await getStripe().balance.retrieve();
+    stripeTest = "connected - balance retrieved";
+  } catch (err) {
+    stripeTest = err instanceof Error ? err.message : "unknown error";
+  }
+
   return NextResponse.json({
-    hasStripeKey: !!process.env.STRIPE_SECRET_KEY,
-    stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 8) || "MISSING",
-    hasPriceId: !!process.env.STRIPE_PRO_PRICE_ID,
-    priceIdPrefix: process.env.STRIPE_PRO_PRICE_ID?.substring(0, 10) || "MISSING",
-    hasWebhookSecret: !!process.env.STRIPE_WEBHOOK_SECRET,
-    hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
-    nextAuthUrl: process.env.NEXTAUTH_URL || "MISSING",
-    hasAppUrl: !!process.env.NEXT_PUBLIC_APP_URL,
-    appUrl: process.env.NEXT_PUBLIC_APP_URL || "MISSING",
+    stripeKeyLength: process.env.STRIPE_SECRET_KEY?.length || 0,
+    stripeKeyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 12) || "MISSING",
+    stripeKeySuffix: process.env.STRIPE_SECRET_KEY?.slice(-4) || "MISSING",
+    stripeTest,
+    priceId: process.env.STRIPE_PRO_PRICE_ID || "MISSING",
     nodeEnv: process.env.NODE_ENV,
   });
 }
