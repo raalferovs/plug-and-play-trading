@@ -31,14 +31,24 @@ function BillingContent() {
     loadSubscription();
   }, []);
 
+  const [error, setError] = useState("");
+
   const handleUpgrade = async () => {
     setCheckoutLoading(true);
-    const res = await fetch("/api/stripe/checkout", { method: "POST" });
-    const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
+    setError("");
+    try {
+      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setError(data.error || "Failed to create checkout session");
+        setCheckoutLoading(false);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setCheckoutLoading(false);
     }
-    setCheckoutLoading(false);
   };
 
   const handleManageBilling = async () => {
@@ -79,6 +89,12 @@ function BillingContent() {
         <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6 text-yellow-400">
           Checkout was not completed. You can try again whenever you&apos;re
           ready.
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6 text-red-400">
+          {error}
         </div>
       )}
 
