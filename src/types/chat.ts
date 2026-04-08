@@ -20,6 +20,7 @@ export interface Channel {
   description: string;
   categoryId: string;
   order: number;
+  isPremium: boolean;
 }
 
 export interface CategoryWithChannels {

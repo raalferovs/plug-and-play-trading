@@ -1,14 +1,29 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // Create admin account
+  const hashedPassword = await bcrypt.hash("admin123", 12);
+  await prisma.user.upsert({
+    where: { email: "admin@plugandplay.com" },
+    update: {},
+    create: {
+      name: "Admin",
+      email: "admin@plugandplay.com",
+      password: hashedPassword,
+      role: "admin",
+    },
+  });
+  console.log("Admin account created: admin@plugandplay.com");
+
   const community = await prisma.category.upsert({
     where: { name: "Community" },
     update: {},
     create: {
       name: "Community",
-      icon: "users",
+      icon: "👥",
       order: 0,
     },
   });

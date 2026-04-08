@@ -55,6 +55,11 @@ export default function Navbar() {
           <span className="text-sm text-gray-300 hidden sm:block">
             {session.user.name}
           </span>
+          {session.user.subscriptionStatus === "active" && (
+            <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded font-medium hidden sm:block">
+              PRO
+            </span>
+          )}
           <svg
             className={`w-4 h-4 text-gray-400 transition-transform ${
               dropdownOpen ? "rotate-180" : ""
@@ -80,6 +85,13 @@ export default function Navbar() {
               onClick={() => setDropdownOpen(false)}
             >
               Profile
+            </Link>
+            <Link
+              href="/billing"
+              className="block px-4 py-2 text-sm text-gray-300 hover:bg-midnight-light hover:text-white transition-colors"
+              onClick={() => setDropdownOpen(false)}
+            >
+              Billing
             </Link>
             {session.user.role === "admin" && (
               <Link

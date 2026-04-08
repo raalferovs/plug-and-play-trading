@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const { error } = await requireAdmin();
   if (error) return error;
 
-  const { name, description, categoryId } = await request.json();
+  const { name, description, categoryId, isPremium } = await request.json();
 
   if (!name || !categoryId) {
     return NextResponse.json(
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   }
 
   const channel = await prisma.channel.create({
-    data: { name, description: description || "", categoryId },
+    data: { name, description: description || "", categoryId, isPremium: isPremium || false },
   });
 
   return NextResponse.json(channel);

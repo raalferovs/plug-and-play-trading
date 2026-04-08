@@ -19,6 +19,25 @@ export async function GET(request: Request) {
     );
   }
 
+  const channel = await prisma.channel.findUnique({
+    where: { id: channelId },
+  });
+
+  if (channel?.isPremium) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+    const isPro =
+      user?.subscriptionStatus === "active" ||
+      user?.subscriptionStatus === "trialing";
+    if (!isPro && user?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Pro subscription required" },
+        { status: 403 }
+      );
+    }
+  }
+
   const messages = await prisma.message.findMany({
     where: { channelId },
     include: {
@@ -46,6 +65,25 @@ export async function POST(request: Request) {
       { error: "content and channelId are required" },
       { status: 400 }
     );
+  }
+
+  const postChannel = await prisma.channel.findUnique({
+    where: { id: channelId },
+  });
+
+  if (postChannel?.isPremium) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+    });
+    const isPro =
+      user?.subscriptionStatus === "active" ||
+      user?.subscriptionStatus === "trialing";
+    if (!isPro && user?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Pro subscription required" },
+        { status: 403 }
+      );
+    }
   }
 
   const message = await prisma.message.create({

@@ -9,13 +9,14 @@ export async function PUT(
   const { error } = await requireAdmin();
   if (error) return error;
 
-  const { name, description } = await request.json();
+  const { name, description, isPremium } = await request.json();
 
   const channel = await prisma.channel.update({
     where: { id: params.id },
     data: {
       ...(name !== undefined && { name }),
       ...(description !== undefined && { description }),
+      ...(isPremium !== undefined && { isPremium }),
     },
   });
 

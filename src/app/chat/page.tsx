@@ -160,6 +160,10 @@ export default function ChatPage() {
     (ch) => ch.id === activeChannelId
   );
 
+  const isPro =
+    session?.user.subscriptionStatus === "active" ||
+    session?.user.subscriptionStatus === "trialing";
+
   if (!session) return null;
 
   return (
@@ -224,6 +228,7 @@ export default function ChatPage() {
         messages={messages}
         currentUserId={session.user.id}
         currentUserRole={session.user.role}
+        isPro={isPro}
         onSendMessage={handleSendMessage}
         onDeleteMessage={handleDeleteMessage}
       />

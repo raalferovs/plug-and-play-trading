@@ -6,7 +6,7 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const PORT = 3005;
+const PORT = process.env.PORT || 3005;
 
 const onlineUsers = new Map();
 
@@ -17,7 +17,7 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: `http://localhost:${PORT}`,
+      origin: process.env.NEXTAUTH_URL || `http://localhost:${PORT}`,
       methods: ["GET", "POST"],
     },
   });

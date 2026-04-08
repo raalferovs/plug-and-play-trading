@@ -64,6 +64,7 @@ export const authOptions: NextAuthOptions = {
           session.user.name = dbUser.name;
           session.user.role = dbUser.role;
           session.user.avatarUrl = dbUser.avatarUrl;
+          session.user.subscriptionStatus = dbUser.subscriptionStatus;
         }
       }
       return session;

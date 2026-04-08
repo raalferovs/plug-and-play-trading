@@ -9,6 +9,7 @@ interface ChatAreaProps {
   messages: ChatMessage[];
   currentUserId: string;
   currentUserRole: string;
+  isPro: boolean;
   onSendMessage: (content: string) => void;
   onDeleteMessage: (messageId: string) => void;
 }
@@ -18,6 +19,7 @@ export default function ChatArea({
   messages,
   currentUserId,
   currentUserRole,
+  isPro,
   onSendMessage,
   onDeleteMessage,
 }: ChatAreaProps) {
@@ -40,6 +42,42 @@ export default function ChatArea({
     return (
       <div className="flex-1 flex items-center justify-center bg-midnight-dark">
         <p className="text-gray-500">Select a channel to start chatting</p>
+      </div>
+    );
+  }
+
+  if (channel.isPremium && !isPro && currentUserRole !== "admin") {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center bg-midnight-dark">
+        <div className="text-center max-w-md">
+          <svg
+            className="w-16 h-16 text-yellow-500 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Premium Channel
+          </h2>
+          <p className="text-gray-400 mb-6">
+            <span className="text-gray-500">#</span>
+            {channel.name} is available to Pro members. Upgrade to access
+            exclusive trading content and discussions.
+          </p>
+          <a
+            href="/billing"
+            className="inline-block bg-accent text-black font-semibold px-6 py-3 rounded-lg hover:bg-accent-dim transition-colors"
+          >
+            Upgrade to Pro
+          </a>
+        </div>
       </div>
     );
   }

@@ -8,13 +8,6 @@ interface CategoryRailProps {
   onSelectCategory: (categoryId: string) => void;
 }
 
-const categoryIcons: Record<string, string> = {
-  users: "👥",
-  trading: "📈",
-  signals: "🎯",
-  default: "📁",
-};
-
 export default function CategoryRail({
   categories,
   activeCategoryId,
@@ -24,7 +17,7 @@ export default function CategoryRail({
     <div className="w-16 bg-black flex flex-col items-center py-4 gap-2 border-r border-midnight-light">
       {categories.map((category) => {
         const isActive = category.id === activeCategoryId;
-        const icon = categoryIcons[category.icon] || categoryIcons.default;
+        const icon = category.icon || "📁";
 
         return (
           <button
