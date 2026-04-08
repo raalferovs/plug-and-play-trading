@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "build": "npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts && next build",
-    "start": "NODE_ENV=production node server.js",
+    "build": "npx prisma generate && next build",
+    "start": "npx prisma migrate deploy && npx tsx prisma/seed.ts && NODE_ENV=production node server.js",
     "lint": "next lint",
     "seed": "npx tsx prisma/seed.ts"
   },
