@@ -5,7 +5,7 @@ export async function GET() {
   // Test actual Stripe connection
   let stripeTest = "not tested";
   try {
-    const balance = await getStripe().balance.retrieve();
+    await getStripe().balance.retrieve();
     stripeTest = "connected - balance retrieved";
   } catch (err) {
     stripeTest = err instanceof Error ? err.message : "unknown error";
