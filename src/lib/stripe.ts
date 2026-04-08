@@ -10,10 +10,3 @@ export function getStripe(): Stripe {
   }
   return _stripe;
 }
-
-// For backwards compatibility
-export const stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return (getStripe() as Record<string | symbol, unknown>)[prop];
-  },
-});
