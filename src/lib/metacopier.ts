@@ -57,17 +57,16 @@ export async function stopAccount(accountId: string) {
 
 export async function createCopier(
   accountId: string,
-  masterAlias: string,
+  masterAccountId: string,
   multiplier: number
 ) {
   return apiRequest("POST", `/accounts/${accountId}/copiers`, {
-    copyFromAccountOrStrategy: masterAlias,
-    multiplier,
-    copyStopLoss: true,
-    copyTakeProfit: true,
-    skipPendingOrders: true,
-    copyOpenPositions: false,
+    sourceAccountId: masterAccountId,
     active: true,
+    multiplier,
+    copyStopLossTakeProfitValues: true,
+    openRetry: true,
+    slippage: 10,
   });
 }
 

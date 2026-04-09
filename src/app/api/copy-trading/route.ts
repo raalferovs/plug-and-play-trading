@@ -56,10 +56,10 @@ export async function POST(request: Request) {
     await startAccount(metacopierAccountId);
 
     // 3. Create copier linking to master
-    const masterAlias = process.env.METACOPIER_MASTER_ALIAS!;
+    const masterAccountId = process.env.METACOPIER_MASTER_ACCOUNT_ID!;
     const copier = await createCopier(
       metacopierAccountId,
-      masterAlias,
+      masterAccountId,
       multiplier
     );
 
