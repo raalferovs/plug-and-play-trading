@@ -61,7 +61,7 @@ export async function createCopier(
   multiplier: number
 ) {
   return apiRequest("POST", `/accounts/${accountId}/copiers`, {
-    sourceAccountId: masterAccountId,
+    fromAccount: { id: masterAccountId },
     active: true,
     multiplier,
     copyStopLossTakeProfitValues: true,
