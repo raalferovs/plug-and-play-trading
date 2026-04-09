@@ -87,6 +87,13 @@ export default function Navbar() {
               Profile
             </Link>
             <Link
+              href="/copy-trading"
+              className="block px-4 py-2 text-sm text-gray-300 hover:bg-midnight-light hover:text-white transition-colors"
+              onClick={() => setDropdownOpen(false)}
+            >
+              Copy Trading
+            </Link>
+            <Link
               href="/billing"
               className="block px-4 py-2 text-sm text-gray-300 hover:bg-midnight-light hover:text-white transition-colors"
               onClick={() => setDropdownOpen(false)}

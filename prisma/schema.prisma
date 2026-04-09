@@ -22,7 +22,26 @@ model User {
   currentPeriodEnd   DateTime?
   createdAt          DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  messages  Message[]
+  messages            Message[]
+  copyTradingAccounts CopyTradingAccount[]
+}
+
+model CopyTradingAccount {
+  id                  String    @id @default(cuid())
+  userId              String
+  user                User      @relation(fields: [userId], references: [id])
+  metacopierAccountId String?   @unique
+  metacopierId        String?   @unique
+  brokerServer        String
+  loginNumber         String
+  status              String    @default("pending")
+  riskMultiplier      Float     @default(1.0)
+  alias               String    @default("")
+  balance             Float?
+  equity              Float?
+  errorMessage        String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 }
 
 model Category {
