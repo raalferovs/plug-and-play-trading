@@ -61,12 +61,12 @@ export async function createCopier(
   multiplier: number
 ) {
   return apiRequest("POST", `/accounts/${accountId}/copiers`, {
-    fromAccount: { id: masterAccountId },
+    fromAccountId: masterAccountId,
     active: true,
     multiplier,
-    copyStopLossTakeProfitValues: true,
-    openRetry: true,
-    slippage: 10,
+    copyStopLoss: true,
+    copyTakeProfit: true,
+    maxSlippage: 10,
   });
 }
 
