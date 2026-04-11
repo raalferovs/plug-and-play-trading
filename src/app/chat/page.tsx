@@ -8,14 +8,13 @@ import {
   ChatMessage,
   OnlineUser,
 } from "@/types/chat";
-import CategoryRail from "@/components/chat/CategoryRail";
+import ModuleRail from "@/components/ModuleRail";
 import ChannelList from "@/components/chat/ChannelList";
 import ChatArea from "@/components/chat/ChatArea";
 
 export default function ChatPage() {
   const { data: session } = useSession();
   const [categories, setCategories] = useState<CategoryWithChannels[]>([]);
-  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
@@ -29,11 +28,12 @@ export default function ChatPage() {
       const data = await res.json();
       setCategories(data);
 
-      if (data.length > 0) {
-        setActiveCategoryId(data[0].id);
-        if (data[0].channels.length > 0) {
-          setActiveChannelId(data[0].channels[0].id);
-        }
+      // Auto-select first channel from first category
+      const firstChannel = data
+        .flatMap((c: CategoryWithChannels) => c.channels)
+        .find(Boolean);
+      if (firstChannel) {
+        setActiveChannelId(firstChannel.id);
       }
     }
     loadCategories();
@@ -96,18 +96,6 @@ export default function ChatPage() {
     }
   }, [activeChannelId]);
 
-  const handleSelectCategory = useCallback(
-    (categoryId: string) => {
-      setActiveCategoryId(categoryId);
-      const category = categories.find((c) => c.id === categoryId);
-      if (category && category.channels.length > 0) {
-        setActiveChannelId(category.channels[0].id);
-      }
-      setSidebarOpen(false);
-    },
-    [categories]
-  );
-
   const handleSelectChannel = useCallback((channelId: string) => {
     setActiveChannelId(channelId);
     setSidebarOpen(false);
@@ -155,10 +143,9 @@ export default function ChatPage() {
     [activeChannelId]
   );
 
-  const activeCategory = categories.find((c) => c.id === activeCategoryId);
-  const activeChannel = activeCategory?.channels.find(
-    (ch) => ch.id === activeChannelId
-  );
+  const activeChannel = categories
+    .flatMap((c) => c.channels)
+    .find((ch) => ch.id === activeChannelId);
 
   const isPro =
     session?.user.subscriptionStatus === "active" ||
@@ -205,20 +192,13 @@ export default function ChatPage() {
         />
 
         <div className="relative flex z-10">
-          <CategoryRail
+          <ModuleRail />
+          <ChannelList
             categories={categories}
-            activeCategoryId={activeCategoryId}
-            onSelectCategory={handleSelectCategory}
+            activeChannelId={activeChannelId}
+            onSelectChannel={handleSelectChannel}
+            onlineUsers={onlineUsers}
           />
-          {activeCategory && (
-            <ChannelList
-              channels={activeCategory.channels}
-              categoryName={activeCategory.name}
-              activeChannelId={activeChannelId}
-              onSelectChannel={handleSelectChannel}
-              onlineUsers={onlineUsers}
-            />
-          )}
         </div>
       </div>
 

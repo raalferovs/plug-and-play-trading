@@ -1,19 +1,17 @@
 "use client";
 
-import { Channel, OnlineUser } from "@/types/chat";
+import { CategoryWithChannels, OnlineUser } from "@/types/chat";
 import Avatar from "@/components/Avatar";
 
 interface ChannelListProps {
-  channels: Channel[];
-  categoryName: string;
+  categories: CategoryWithChannels[];
   activeChannelId: string | null;
   onSelectChannel: (channelId: string) => void;
   onlineUsers: OnlineUser[];
 }
 
 export default function ChannelList({
-  channels,
-  categoryName,
+  categories,
   activeChannelId,
   onSelectChannel,
   onlineUsers,
@@ -21,44 +19,50 @@ export default function ChannelList({
   return (
     <div className="w-56 bg-midnight-dark flex flex-col border-r border-midnight-light">
       <div className="p-4 border-b border-midnight-light">
-        <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-          {categoryName}
-        </h2>
+        <h2 className="text-sm font-semibold text-white">Community</h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2">
-        {channels.map((channel) => {
-          const isActive = channel.id === activeChannelId;
-          return (
-            <button
-              key={channel.id}
-              onClick={() => onSelectChannel(channel.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg mb-0.5 transition-colors ${
-                isActive
-                  ? "bg-midnight-light text-white"
-                  : "text-gray-400 hover:bg-midnight hover:text-gray-200"
-              }`}
-            >
-              <span className="text-gray-500 mr-1">#</span>
-              {channel.name}
-              {channel.isPremium && (
-                <svg
-                  className="w-3.5 h-3.5 text-yellow-500 ml-1.5 inline-block"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+      <div className="flex-1 overflow-y-auto p-2 space-y-3">
+        {categories.map((category) => (
+          <div key={category.id}>
+            <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider px-3 py-1 flex items-center gap-1.5">
+              {category.icon && <span>{category.icon}</span>}
+              {category.name}
+            </h3>
+            {category.channels.map((channel) => {
+              const isActive = channel.id === activeChannelId;
+              return (
+                <button
+                  key={channel.id}
+                  onClick={() => onSelectChannel(channel.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg mb-0.5 transition-colors ${
+                    isActive
+                      ? "bg-midnight-light text-white"
+                      : "text-gray-400 hover:bg-midnight hover:text-gray-200"
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              )}
-            </button>
-          );
-        })}
+                  <span className="text-gray-500 mr-1">#</span>
+                  {channel.name}
+                  {channel.isPremium && (
+                    <svg
+                      className="w-3.5 h-3.5 text-yellow-500 ml-1.5 inline-block"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       <div className="border-t border-midnight-light p-3">
