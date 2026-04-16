@@ -7,6 +7,9 @@ import {
   stopAccount,
   deleteCopier,
   deleteAccount,
+  createRiskLimit,
+  updateRiskLimit,
+  deleteRiskLimit,
 } from "@/lib/metacopier";
 
 export async function PUT(
@@ -27,8 +30,13 @@ export async function PUT(
   }
 
   try {
-    const { riskMultiplier } = await request.json();
-    const multiplier = Math.min(Math.max(riskMultiplier || 1, 0.1), 5);
+    const { riskMultiplier, dailyRiskLimit: dailyRiskLimitIn } =
+      await request.json();
+    const multiplier = Math.min(Math.max(riskMultiplier ?? 1, 0.1), 10);
+    const dailyRiskLimit = Math.min(
+      Math.max(dailyRiskLimitIn ?? multiplier * 10, 1),
+      100
+    );
 
     if (account.metacopierAccountId && account.metacopierId) {
       await updateCopier(account.metacopierAccountId, account.metacopierId, {
@@ -36,9 +44,33 @@ export async function PUT(
       });
     }
 
+    // Keep the MetaCopier risk limit in sync with the multiplier.
+    let metacopierRiskLimitId = account.metacopierRiskLimitId;
+    if (account.metacopierAccountId) {
+      if (metacopierRiskLimitId) {
+        await updateRiskLimit(
+          account.metacopierAccountId,
+          metacopierRiskLimitId,
+          dailyRiskLimit
+        );
+      } else {
+        // Legacy account from before this feature shipped — create the
+        // risk limit on the fly so future updates have something to point at.
+        const created = await createRiskLimit(
+          account.metacopierAccountId,
+          dailyRiskLimit
+        );
+        metacopierRiskLimitId = created.id;
+      }
+    }
+
     const updated = await prisma.copyTradingAccount.update({
       where: { id: params.id },
-      data: { riskMultiplier: multiplier },
+      data: {
+        riskMultiplier: multiplier,
+        dailyRiskLimit,
+        metacopierRiskLimitId,
+      },
     });
 
     return NextResponse.json(updated);
@@ -68,11 +100,22 @@ export async function DELETE(
 
   try {
     if (account.metacopierAccountId) {
-      // Stop account, delete copier, delete account
+      // Stop account, delete risk limit, delete copier, delete account
       try {
         await stopAccount(account.metacopierAccountId);
       } catch {
         // Account may already be stopped
+      }
+
+      if (account.metacopierRiskLimitId) {
+        try {
+          await deleteRiskLimit(
+            account.metacopierAccountId,
+            account.metacopierRiskLimitId
+          );
+        } catch {
+          // Risk limit may already be deleted
+        }
       }
 
       if (account.metacopierId) {

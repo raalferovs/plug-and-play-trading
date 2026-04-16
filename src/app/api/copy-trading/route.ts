@@ -6,6 +6,9 @@ import {
   createSlaveAccount,
   startAccount,
   createCopier,
+  createRiskLimit,
+  deleteCopier,
+  deleteAccount,
 } from "@/lib/metacopier";
 
 export async function GET() {
@@ -29,8 +32,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { brokerServer, loginNumber, password, riskMultiplier } =
-      await request.json();
+    const {
+      brokerServer,
+      loginNumber,
+      password,
+      riskMultiplier,
+      dailyRiskLimit: dailyRiskLimitIn,
+    } = await request.json();
 
     if (!brokerServer || !loginNumber || !password) {
       return NextResponse.json(
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const multiplier = Math.min(Math.max(riskMultiplier || 1, 0.1), 5);
+    const multiplier = Math.min(Math.max(riskMultiplier ?? 1, 0.1), 10);
     const alias = `PP-${session.user.name}-${loginNumber}`;
 
     // 1. Create slave account in MetaCopier
@@ -65,16 +73,43 @@ export async function POST(request: Request) {
 
     const metacopierId = copier.id || copier.copierId;
 
-    // 4. Save to database
+    // 4. Create the daily risk limit. Use client-supplied value if present,
+    //    otherwise fall back to the linked formula (multiplier x 10%).
+    const dailyRiskLimit = Math.min(
+      Math.max(dailyRiskLimitIn ?? multiplier * 10, 1),
+      100
+    );
+    let metacopierRiskLimitId: string;
+    try {
+      const riskLimit = await createRiskLimit(
+        metacopierAccountId,
+        dailyRiskLimit
+      );
+      metacopierRiskLimitId = riskLimit.id;
+    } catch (rlErr) {
+      // Rollback: tear down the half-created MetaCopier resources so the
+      // user does not see ghost slave accounts on retry.
+      try {
+        await deleteCopier(metacopierAccountId, metacopierId);
+      } catch {}
+      try {
+        await deleteAccount(metacopierAccountId);
+      } catch {}
+      throw rlErr;
+    }
+
+    // 5. Save to database
     const copyAccount = await prisma.copyTradingAccount.create({
       data: {
         userId: session.user.id,
         metacopierAccountId,
         metacopierId,
+        metacopierRiskLimitId,
         brokerServer,
         loginNumber,
         status: "active",
         riskMultiplier: multiplier,
+        dailyRiskLimit,
         alias,
       },
     });

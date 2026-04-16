@@ -82,6 +82,37 @@ export async function deleteCopier(accountId: string, copierId: string) {
   return apiRequest("DELETE", `/accounts/${accountId}/copiers/${copierId}`);
 }
 
+export async function createRiskLimit(accountId: string, percent: number) {
+  return apiRequest("POST", `/accounts/${accountId}/riskLimits`, {
+    riskType: { id: 1 }, // Balance-equity daily
+    riskLimit: percent / 100, // 10 -> 0.10
+    closeAllOpenPositions: true,
+    active: true,
+    fulfillSeconds: 1,
+  });
+}
+
+export async function updateRiskLimit(
+  accountId: string,
+  riskLimitId: string,
+  percent: number
+) {
+  return apiRequest("PUT", `/accounts/${accountId}/riskLimits/${riskLimitId}`, {
+    riskType: { id: 1 },
+    riskLimit: percent / 100,
+    closeAllOpenPositions: true,
+    active: true,
+    fulfillSeconds: 1,
+  });
+}
+
+export async function deleteRiskLimit(accountId: string, riskLimitId: string) {
+  return apiRequest(
+    "DELETE",
+    `/accounts/${accountId}/riskLimits/${riskLimitId}`
+  );
+}
+
 export async function deleteAccount(accountId: string) {
   return apiRequest("DELETE", `/accounts/${accountId}`);
 }
