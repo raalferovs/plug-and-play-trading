@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
@@ -48,6 +49,19 @@ async function main() {
         categoryId: community.id,
       },
     });
+  }
+
+  const usersWithoutLicense = await prisma.user.findMany({
+    where: { license: null },
+    select: { id: true },
+  });
+  for (const u of usersWithoutLicense) {
+    await prisma.license.create({
+      data: { userId: u.id, key: randomUUID() },
+    });
+  }
+  if (usersWithoutLicense.length > 0) {
+    console.log(`Provisioned licenses for ${usersWithoutLicense.length} user(s)`);
   }
 
   console.log("Seed data created successfully");

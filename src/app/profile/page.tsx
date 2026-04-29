@@ -204,12 +204,20 @@ export default function ProfilePage() {
               })}
             </p>
 
-            <button
-              onClick={() => setEditing(true)}
-              className="mt-4 bg-midnight-light text-gray-300 px-4 py-2 rounded-lg hover:bg-midnight-50 transition-colors text-sm"
-            >
-              Edit Profile
-            </button>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setEditing(true)}
+                className="bg-midnight-light text-gray-300 px-4 py-2 rounded-lg hover:bg-midnight-50 transition-colors text-sm"
+              >
+                Edit Profile
+              </button>
+              <Link
+                href="/licenses"
+                className="bg-midnight-light text-gray-300 px-4 py-2 rounded-lg hover:bg-midnight-50 transition-colors text-sm"
+              >
+                Manage License
+              </Link>
+            </div>
           </div>
         )}
       </div>
