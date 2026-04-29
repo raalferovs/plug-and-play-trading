@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { provisionLicense } from "@/lib/license";
 
 export async function POST(request: Request) {
   try {
@@ -40,6 +41,8 @@ export async function POST(request: Request) {
         password: hashedPassword,
       },
     });
+
+    await provisionLicense(user.id);
 
     return NextResponse.json({
       id: user.id,

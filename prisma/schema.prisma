@@ -24,6 +24,49 @@ model User {
   updatedAt DateTime  @updatedAt
   messages            Message[]
   copyTradingAccounts CopyTradingAccount[]
+  license             License?
+}
+
+model License {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  key       String   @unique
+  status    String   @default("active")
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bindings  LicenseBinding[]
+  logs      LicenseValidationLog[]
+}
+
+model LicenseBinding {
+  id              String   @id @default(cuid())
+  licenseId       String
+  license         License  @relation(fields: [licenseId], references: [id])
+  mt5Account      String
+  accountType     String
+  brokerServer    String   @default("")
+  firstSeenAt     DateTime @default(now())
+  lastValidatedAt DateTime @default(now())
+  lastIp          String   @default("")
+
+  @@unique([licenseId, mt5Account])
+}
+
+model LicenseValidationLog {
+  id           String   @id @default(cuid())
+  licenseId    String?
+  license      License? @relation(fields: [licenseId], references: [id])
+  keyAttempted String
+  mt5Account   String   @default("")
+  ipAddress    String   @default("")
+  userAgent    String   @default("")
+  result       String
+  createdAt    DateTime @default(now())
+
+  @@index([licenseId, createdAt])
+  @@index([createdAt])
 }
 
 model CopyTradingAccount {
