@@ -12,6 +12,7 @@ interface CopyAccount {
   loginNumber: string;
   status: string;
   riskMultiplier: number;
+  dailyRiskLimit: number;
   alias: string;
   balance: number | null;
   equity: number | null;
@@ -39,13 +40,17 @@ export default function CopyTradingPage() {
   const [success, setSuccess] = useState("");
   const [statusMap, setStatusMap] = useState<Record<string, AccountStatus>>({});
   const [editingMultiplier, setEditingMultiplier] = useState<string | null>(null);
-  const [editMultiplierValue, setEditMultiplierValue] = useState(1);
+  const [editMultiplierValue, setEditMultiplierValue] = useState("1");
+  const [editDailyRiskLimitValue, setEditDailyRiskLimitValue] = useState("10");
 
   // Form state
   const [brokerServer, setBrokerServer] = useState("");
   const [loginNumber, setLoginNumber] = useState("");
   const [password, setPassword] = useState("");
   const [riskMultiplier, setRiskMultiplier] = useState(1);
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [advancedMultiplierInput, setAdvancedMultiplierInput] = useState("1");
+  const [advancedRiskLimitInput, setAdvancedRiskLimitInput] = useState("10");
 
   useEffect(() => {
     loadAccounts();
@@ -98,6 +103,13 @@ export default function CopyTradingPage() {
     setConnecting(true);
 
     try {
+      const multiplier = advancedMode
+        ? parseFloat(advancedMultiplierInput) || 1
+        : riskMultiplier;
+      const dailyRiskLimit = advancedMode
+        ? parseFloat(advancedRiskLimitInput) || multiplier * 10
+        : riskMultiplier * 10;
+
       const res = await fetch("/api/copy-trading", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,7 +117,8 @@ export default function CopyTradingPage() {
           brokerServer,
           loginNumber,
           password,
-          riskMultiplier,
+          riskMultiplier: multiplier,
+          dailyRiskLimit,
         }),
       });
 
@@ -122,6 +135,9 @@ export default function CopyTradingPage() {
       setLoginNumber("");
       setPassword("");
       setRiskMultiplier(1);
+      setAdvancedMode(false);
+      setAdvancedMultiplierInput("1");
+      setAdvancedRiskLimitInput("10");
       setBrokerSearch("");
       loadAccounts();
     } catch {
@@ -146,22 +162,32 @@ export default function CopyTradingPage() {
 
   const handleUpdateMultiplier = async (accountId: string) => {
     try {
+      const multiplier = parseFloat(editMultiplierValue) || 1;
+      const dailyRiskLimit = parseFloat(editDailyRiskLimitValue) || 10;
+
       const res = await fetch(`/api/copy-trading/${accountId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ riskMultiplier: editMultiplierValue }),
+        body: JSON.stringify({
+          riskMultiplier: multiplier,
+          dailyRiskLimit,
+        }),
       });
 
       if (res.ok) {
         setAccounts((prev) =>
           prev.map((a) =>
             a.id === accountId
-              ? { ...a, riskMultiplier: editMultiplierValue }
+              ? {
+                  ...a,
+                  riskMultiplier: multiplier,
+                  dailyRiskLimit,
+                }
               : a
           )
         );
         setEditingMultiplier(null);
-        setSuccess("Risk multiplier updated.");
+        setSuccess("Risk settings updated.");
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch {
@@ -282,28 +308,152 @@ export default function CopyTradingPage() {
             </div>
           </div>
 
-          {/* Risk Multiplier */}
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">
-              Risk Multiplier:{" "}
-              <span className="text-accent font-semibold">
-                {riskMultiplier}x
-              </span>
-            </label>
-            <input
-              type="range"
-              min="0.1"
-              max="5"
-              step="0.1"
-              value={riskMultiplier}
-              onChange={(e) => setRiskMultiplier(parseFloat(e.target.value))}
-              className="w-full accent-accent"
-            />
-            <div className="flex justify-between text-xs text-gray-600 mt-1">
-              <span>0.1x (Low Risk)</span>
-              <span>1x (Match)</span>
-              <span>5x (High Risk)</span>
+          {/* Risk Settings */}
+          <div className="bg-midnight-dark border border-midnight-light rounded-lg p-5">
+            <h3 className="text-base font-semibold text-white mb-1">
+              Risk settings
+            </h3>
+            <p className="text-sm text-gray-400 mb-2">
+              Trading positions will be automatically scaled based on your
+              account balance.
+            </p>
+            <p className="text-sm text-yellow-500/90 mb-4">
+              ⚠ It&apos;s recommended to keep the{" "}
+              <span className="font-semibold">multiplier at 1x</span> and{" "}
+              <span className="font-semibold">daily risk limit at 10%</span>.
+              Please also consider your available margin before increasing the
+              multiplier.
+            </p>
+
+            {!advancedMode && (
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.5"
+                value={riskMultiplier}
+                onChange={(e) => setRiskMultiplier(parseFloat(e.target.value))}
+                className="w-full accent-accent mb-4"
+              />
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <p className="text-sm text-gray-400">Lot size multiplier</p>
+                  <span className="group relative inline-flex">
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-help"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-midnight border border-midnight-light rounded-lg p-3 text-xs text-gray-300 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
+                      All trades are already automatically scaled based on your
+                      account balance. Optionally, you can adjust your risk by
+                      changing this additional multiplier. Please use with
+                      caution.
+                    </span>
+                  </span>
+                </div>
+                {advancedMode ? (
+                  <input
+                    type="number"
+                    min="0.1"
+                    max="10"
+                    step="0.1"
+                    value={advancedMultiplierInput}
+                    onChange={(e) =>
+                      setAdvancedMultiplierInput(e.target.value)
+                    }
+                    className="w-full bg-midnight border border-midnight-light rounded-lg px-4 py-3 text-2xl font-bold text-accent focus:outline-none focus:border-accent"
+                  />
+                ) : (
+                  <p className="text-4xl font-bold text-accent">
+                    {riskMultiplier % 1 === 0
+                      ? riskMultiplier
+                      : riskMultiplier.toFixed(1)}
+                    x
+                  </p>
+                )}
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <p className="text-sm text-gray-400">Daily risk limit</p>
+                  <span className="group relative inline-flex">
+                    <svg
+                      className="w-4 h-4 text-gray-500 cursor-help"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 bg-midnight border border-midnight-light rounded-lg p-3 text-xs text-gray-300 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
+                      As an additional safety measure you can set a maximum
+                      daily risk limit. If your equity drops below this limit,
+                      all positions will be closed. Please note that withdrawals
+                      can trigger the limit. Only withdraw when there are no
+                      open positions.
+                    </span>
+                  </span>
+                </div>
+                {advancedMode ? (
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={advancedRiskLimitInput}
+                    onChange={(e) => setAdvancedRiskLimitInput(e.target.value)}
+                    className="w-full bg-midnight border border-midnight-light rounded-lg px-4 py-3 text-2xl font-bold text-accent focus:outline-none focus:border-accent"
+                  />
+                ) : (
+                  <p className="text-4xl font-bold text-accent">
+                    {Math.round(riskMultiplier * 10)}%
+                  </p>
+                )}
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!advancedMode) {
+                  setAdvancedMultiplierInput(riskMultiplier.toString());
+                  setAdvancedRiskLimitInput(
+                    Math.round(riskMultiplier * 10).toString()
+                  );
+                }
+                setAdvancedMode(!advancedMode);
+              }}
+              className="flex items-center gap-3 mt-5 text-sm text-gray-300 hover:text-white transition-colors"
+            >
+              <span
+                className={`relative inline-flex w-11 h-6 rounded-full transition-colors ${
+                  advancedMode ? "bg-accent" : "bg-midnight-light"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    advancedMode ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </span>
+              Advanced configuration
+            </button>
           </div>
 
           <button
@@ -408,18 +558,36 @@ export default function CopyTradingPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {editingMultiplier === account.id ? (
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number"
-                            min="0.1"
-                            max="5"
-                            step="0.1"
-                            value={editMultiplierValue}
-                            onChange={(e) =>
-                              setEditMultiplierValue(parseFloat(e.target.value))
-                            }
-                            className="w-20 bg-midnight-dark border border-accent rounded px-2 py-1 text-sm text-white focus:outline-none"
-                          />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label className="text-xs text-gray-500">
+                            Multiplier
+                            <input
+                              type="number"
+                              min="0.1"
+                              max="10"
+                              step="0.1"
+                              value={editMultiplierValue}
+                              onChange={(e) =>
+                                setEditMultiplierValue(e.target.value)
+                              }
+                              className="ml-1 w-20 bg-midnight-dark border border-accent rounded px-2 py-1 text-sm text-white focus:outline-none"
+                            />
+                          </label>
+                          <label className="text-xs text-gray-500">
+                            Daily limit
+                            <input
+                              type="number"
+                              min="1"
+                              max="100"
+                              step="1"
+                              value={editDailyRiskLimitValue}
+                              onChange={(e) =>
+                                setEditDailyRiskLimitValue(e.target.value)
+                              }
+                              className="ml-1 w-20 bg-midnight-dark border border-accent rounded px-2 py-1 text-sm text-white focus:outline-none"
+                            />
+                            <span className="ml-1 text-gray-500">%</span>
+                          </label>
                           <button
                             onClick={() => handleUpdateMultiplier(account.id)}
                             className="text-xs px-2 py-1 rounded bg-accent text-black font-semibold"
@@ -437,13 +605,23 @@ export default function CopyTradingPage() {
                         <button
                           onClick={() => {
                             setEditingMultiplier(account.id);
-                            setEditMultiplierValue(account.riskMultiplier);
+                            setEditMultiplierValue(
+                              account.riskMultiplier.toString()
+                            );
+                            setEditDailyRiskLimitValue(
+                              Math.round(account.dailyRiskLimit).toString()
+                            );
                           }}
                           className="text-sm text-gray-400 hover:text-accent transition-colors"
                         >
-                          Risk:{" "}
+                          Multiplier:{" "}
                           <span className="text-accent font-semibold">
                             {account.riskMultiplier}x
+                          </span>
+                          <span className="mx-2 text-gray-600">•</span>
+                          Daily limit:{" "}
+                          <span className="text-accent font-semibold">
+                            {Math.round(account.dailyRiskLimit)}%
                           </span>{" "}
                           <span className="text-xs text-gray-600">(edit)</span>
                         </button>
