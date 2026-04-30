@@ -2,25 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  color: #ffffff;
-  background: #000D1F;
+:root {
+  --pp-easing: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Scrollbar styling */
+body {
+  color: #ffffff;
+  background: #0f100f;
+}
+
+/* Tabular numerics — apply to prices, P&L, percentages */
+.pp-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Eyebrow label — small uppercase, used above headings or in card chrome */
+.pp-eyebrow {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a8afa9;
+}
+
+/* Scrollbar styling — matches new dark surface */
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #001532;
+  background: #0f100f;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #002050;
+  background: #1a1c1a;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #003070;
+  background: #235137;
 }
