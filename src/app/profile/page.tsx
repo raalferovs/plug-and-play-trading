@@ -217,6 +217,12 @@ export default function ProfilePage() {
               >
                 Change Password
               </Link>
+              <Link
+                href="/licenses"
+                className="bg-midnight-light text-gray-300 px-4 py-2 rounded-lg hover:bg-midnight-50 transition-colors text-sm"
+              >
+                Manage License
+              </Link>
             </div>
           </div>
         )}
