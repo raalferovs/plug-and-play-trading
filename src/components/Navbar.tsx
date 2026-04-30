@@ -3,9 +3,13 @@
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const HIDDEN_ON = ["/login", "/register"];
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +26,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  if (HIDDEN_ON.includes(pathname)) return null;
   if (!session) return null;
 
   const initials = session.user.name
