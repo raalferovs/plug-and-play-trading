@@ -23,12 +23,20 @@ export default function AdminPage() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-white">Admin Panel</h1>
-        <Link
-          href="/chat"
-          className="text-sm text-gray-500 hover:text-accent transition-colors"
-        >
-          &larr; Back to chat
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/eas"
+            className="text-sm text-gray-300 border border-midnight-light hover:border-accent hover:text-accent px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Manage EAs
+          </Link>
+          <Link
+            href="/chat"
+            className="text-sm text-gray-500 hover:text-accent transition-colors"
+          >
+            &larr; Back to chat
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}

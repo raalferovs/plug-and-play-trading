@@ -73,6 +73,34 @@ model LicenseValidationLog {
   @@index([createdAt])
 }
 
+model Ea {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  name        String
+  description String      @default("")
+  icon        String      @default("📊")
+  isPublished Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  versions    EaVersion[]
+}
+
+model EaVersion {
+  id           String   @id @default(cuid())
+  eaId         String
+  ea           Ea       @relation(fields: [eaId], references: [id])
+  version      String
+  filePath     String
+  fileName     String
+  fileSize     Int
+  releaseNotes String   @default("")
+  isLatest     Boolean  @default(false)
+  releasedAt   DateTime @default(now())
+
+  @@unique([eaId, version])
+  @@index([eaId, releasedAt])
+}
+
 model CopyTradingAccount {
   id                    String    @id @default(cuid())
   userId                String
