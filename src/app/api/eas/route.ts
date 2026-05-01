@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+// Skip Next.js static prerender — this route hits the DB and the build
+// container has no DB connection. Always run at request time.
+export const dynamic = "force-dynamic";
+
 // Public list of published EAs for the /bots page. No subscription gate
 // — free users see the cards too, with a "Subscribe to download" CTA.
 export async function GET() {
