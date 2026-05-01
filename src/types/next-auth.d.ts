@@ -9,6 +9,9 @@ declare module "next-auth" {
       role: string;
       avatarUrl: string;
       subscriptionStatus: string;
+      currentPeriodEnd: string | null;
+      addonStatus: string;
+      addonPeriodEnd: string | null;
     };
   }
 }

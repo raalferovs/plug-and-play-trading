@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { io, Socket } from "socket.io-client";
 import {
   CategoryWithChannels,
@@ -13,7 +14,8 @@ import ChannelList from "@/components/chat/ChannelList";
 import ChatArea from "@/components/chat/ChatArea";
 
 export default function ChatPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [categories, setCategories] = useState<CategoryWithChannels[]>([]);
   const [activeChannelId, setActiveChannelId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -21,11 +23,27 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const socketRef = useRef<Socket | null>(null);
 
+  const hasChatAccess =
+    session?.user.subscriptionStatus === "active" ||
+    session?.user.subscriptionStatus === "trialing" ||
+    session?.user.role === "admin";
+
+  // Free users land here from older bookmarks / direct URL — bounce them to /bots
+  // (no upsell, by product decision).
+  useEffect(() => {
+    if (status === "authenticated" && !hasChatAccess) {
+      router.replace("/bots");
+    }
+  }, [status, hasChatAccess, router]);
+
   // Load categories on mount
   useEffect(() => {
+    if (!hasChatAccess) return;
     async function loadCategories() {
       const res = await fetch("/api/channels");
+      if (!res.ok) return;
       const data = await res.json();
+      if (!Array.isArray(data)) return;
       setCategories(data);
 
       // Auto-select first channel from first category
@@ -37,11 +55,11 @@ export default function ChatPage() {
       }
     }
     loadCategories();
-  }, []);
+  }, [hasChatAccess]);
 
   // Socket connection
   useEffect(() => {
-    if (!session?.user) return;
+    if (!hasChatAccess || !session?.user) return;
 
     const socket = io(window.location.origin);
     socketRef.current = socket;
@@ -78,7 +96,7 @@ export default function ChatPage() {
     return () => {
       socket.disconnect();
     };
-  }, [session]);
+  }, [hasChatAccess, session]);
 
   // Load messages when channel changes
   useEffect(() => {
@@ -86,7 +104,9 @@ export default function ChatPage() {
 
     async function loadMessages() {
       const res = await fetch(`/api/messages?channelId=${activeChannelId}`);
+      if (!res.ok) return;
       const data = await res.json();
+      if (!Array.isArray(data)) return;
       setMessages(data);
     }
     loadMessages();
@@ -152,6 +172,11 @@ export default function ChatPage() {
     session?.user.subscriptionStatus === "trialing";
 
   if (!session) return null;
+
+  if (!hasChatAccess) {
+    // useEffect above redirects to /bots — render nothing in the meantime.
+    return null;
+  }
 
   return (
     <div className="h-[calc(100vh-57px)] flex">

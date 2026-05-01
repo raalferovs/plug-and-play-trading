@@ -31,7 +31,7 @@ export default function LoginForm() {
     if (result?.error) {
       setError(result.error);
     } else {
-      router.push("/chat");
+      router.push("/");
     }
   };
 

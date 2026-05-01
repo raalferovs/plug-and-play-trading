@@ -13,7 +13,7 @@ interface LicenseInfo {
 
 const STATUS_LABEL: Record<string, { label: string; classes: string }> = {
   active: { label: "Active", classes: "bg-accent/20 text-accent" },
-  trialing: { label: "Trial", classes: "bg-accent/20 text-accent" },
+  trialing: { label: "Trial", classes: "bg-orange-500/20 text-orange-400" },
   past_due: { label: "Past Due", classes: "bg-yellow-500/20 text-yellow-400" },
   canceled: { label: "Canceled", classes: "bg-red-500/20 text-red-400" },
   none: { label: "No Subscription", classes: "bg-midnight-light text-gray-400" },
@@ -62,7 +62,19 @@ export default function LicensesPage() {
     );
   }
 
-  const subBadge = STATUS_LABEL[info.subscriptionStatus] ?? STATUS_LABEL.none;
+  const baseBadge = STATUS_LABEL[info.subscriptionStatus] ?? STATUS_LABEL.none;
+  let trialDaysLeft: number | null = null;
+  if (info.subscriptionStatus === "trialing" && info.currentPeriodEnd) {
+    const end = new Date(info.currentPeriodEnd);
+    trialDaysLeft = Math.max(
+      0,
+      Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    );
+  }
+  const subBadge =
+    info.subscriptionStatus === "trialing" && trialDaysLeft !== null
+      ? { ...baseBadge, label: `Trial · ${trialDaysLeft}d left` }
+      : baseBadge;
   const isLicensable =
     info.status === "active" &&
     (info.subscriptionStatus === "active" ||

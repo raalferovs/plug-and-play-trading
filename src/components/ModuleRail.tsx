@@ -2,14 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
-const modules = [
-  { id: "community", label: "Community", icon: "💬", href: "/chat" },
-  { id: "bots", label: "Bots", icon: "🤖", href: "/bots" },
+const allModules = [
+  { id: "community", label: "Community", icon: "💬", href: "/chat", proOnly: true },
+  { id: "bots", label: "Bots", icon: "🤖", href: "/bots", proOnly: false },
 ];
 
 export default function ModuleRail() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const isPro =
+    session?.user.subscriptionStatus === "active" ||
+    session?.user.subscriptionStatus === "trialing" ||
+    session?.user.role === "admin";
+
+  const modules = allModules.filter((m) => !m.proOnly || isPro);
 
   return (
     <div className="w-20 bg-black flex flex-col items-center py-4 gap-3 border-r border-midnight-light">

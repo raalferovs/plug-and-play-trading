@@ -47,7 +47,7 @@ export default function RegisterForm() {
       if (result?.error) {
         setError(result.error);
       } else {
-        router.push("/chat");
+        router.push("/");
       }
     } catch {
       setError("Something went wrong");

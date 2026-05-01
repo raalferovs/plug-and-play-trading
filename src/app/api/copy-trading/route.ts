@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCopyTradingAccess } from "@/lib/subscription";
 import {
   createSlaveAccount,
   startAccount,
@@ -17,6 +18,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Read-only list: kept open even without active subscription so users
+  // whose sub lapsed can still see existing accounts and delete them
+  // (cleanup keeps MetaCopier resources from accruing costs).
   const accounts = await prisma.copyTradingAccount.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
@@ -30,6 +34,9 @@ export async function POST(request: Request) {
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const subError = await requireCopyTradingAccess(session.user.id);
+  if (subError) return subError;
 
   try {
     const {

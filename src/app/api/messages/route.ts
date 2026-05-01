@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireActiveSubscription } from "@/lib/subscription";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const subError = await requireActiveSubscription(session.user.id);
+  if (subError) return subError;
 
   const { searchParams } = new URL(request.url);
   const channelId = searchParams.get("channelId");
@@ -17,25 +21,6 @@ export async function GET(request: Request) {
       { error: "channelId is required" },
       { status: 400 }
     );
-  }
-
-  const channel = await prisma.channel.findUnique({
-    where: { id: channelId },
-  });
-
-  if (channel?.isPremium) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
-    const isPro =
-      user?.subscriptionStatus === "active" ||
-      user?.subscriptionStatus === "trialing";
-    if (!isPro && user?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Pro subscription required" },
-        { status: 403 }
-      );
-    }
   }
 
   const messages = await prisma.message.findMany({
@@ -58,6 +43,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const subError = await requireActiveSubscription(session.user.id);
+  if (subError) return subError;
+
   const { content, channelId } = await request.json();
 
   if (!content || !channelId) {
@@ -65,25 +53,6 @@ export async function POST(request: Request) {
       { error: "content and channelId are required" },
       { status: 400 }
     );
-  }
-
-  const postChannel = await prisma.channel.findUnique({
-    where: { id: channelId },
-  });
-
-  if (postChannel?.isPremium) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    });
-    const isPro =
-      user?.subscriptionStatus === "active" ||
-      user?.subscriptionStatus === "trialing";
-    if (!isPro && user?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Pro subscription required" },
-        { status: 403 }
-      );
-    }
   }
 
   const message = await prisma.message.create({
