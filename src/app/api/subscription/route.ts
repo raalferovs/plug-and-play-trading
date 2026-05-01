@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hasActiveAccess, hasActiveAddon } from "@/lib/subscription";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -15,6 +16,9 @@ export async function GET() {
       subscriptionStatus: true,
       priceId: true,
       currentPeriodEnd: true,
+      addonStatus: true,
+      addonPriceId: true,
+      addonPeriodEnd: true,
     },
   });
 
@@ -22,14 +26,14 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const isPro =
-    user.subscriptionStatus === "active" ||
-    user.subscriptionStatus === "trialing";
-
   return NextResponse.json({
     subscriptionStatus: user.subscriptionStatus,
     priceId: user.priceId,
     currentPeriodEnd: user.currentPeriodEnd,
-    isPro,
+    isPro: hasActiveAccess(user.subscriptionStatus),
+    addonStatus: user.addonStatus,
+    addonPriceId: user.addonPriceId,
+    addonPeriodEnd: user.addonPeriodEnd,
+    hasAddon: hasActiveAddon(user.addonStatus),
   });
 }

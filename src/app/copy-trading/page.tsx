@@ -201,6 +201,67 @@ export default function CopyTradingPage() {
 
   if (!session) return null;
 
+  const subStatus = session.user.subscriptionStatus;
+  const isPro = subStatus === "active" || subStatus === "trialing";
+  const isTrialing = subStatus === "trialing";
+  const hasAddon = session.user.addonStatus === "active";
+  const hasAccess = isPro && hasAddon;
+
+  let trialDaysLeft: number | null = null;
+  if (isTrialing && session.user.currentPeriodEnd) {
+    const end = new Date(session.user.currentPeriodEnd);
+    const diffMs = end.getTime() - Date.now();
+    trialDaysLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  }
+
+  if (!hasAccess) {
+    // Two distinct CTAs based on what the user is missing.
+    const needsPro = !isPro;
+    return (
+      <div className="max-w-2xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-semibold text-white">Copy Trading</h1>
+          <Link
+            href="/chat"
+            className="text-sm text-gray-500 hover:text-accent transition-colors"
+          >
+            &larr; Back to chat
+          </Link>
+        </div>
+        <div className="bg-midnight border border-midnight-light rounded-xl p-8 text-center">
+          <div className="text-5xl mb-4">📈</div>
+          {needsPro ? (
+            <>
+              <h2 className="text-2xl font-semibold text-white mb-2">
+                Copy Trading erfordert PRO + Add-On
+              </h2>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                Starte zuerst deinen 7-tägigen gratis PRO-Trial. Danach kannst
+                du das Copy-Trading Add-On (14,99 €/Monat) hinzufügen.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl font-semibold text-white mb-2">
+                Copy-Trading Add-On hinzufügen
+              </h2>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
+                Du hast PRO. Aktiviere zusätzlich das Copy-Trading Add-On für
+                14,99 €/Monat — sofort nutzbar, monatlich kündbar.
+              </p>
+            </>
+          )}
+          <Link
+            href="/billing"
+            className="inline-block bg-accent text-black font-semibold px-6 py-3 rounded-lg hover:bg-accent-dim transition-colors"
+          >
+            {needsPro ? "PRO-Trial starten" : "Add-On aktivieren"}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-8">
@@ -212,6 +273,20 @@ export default function CopyTradingPage() {
           &larr; Back to chat
         </Link>
       </div>
+
+      {isTrialing && trialDaysLeft !== null && (
+        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3 mb-6 flex items-center justify-between">
+          <span className="text-sm text-orange-400">
+            Trial endet in {trialDaysLeft} {trialDaysLeft === 1 ? "Tag" : "Tagen"} — jederzeit kündbar
+          </span>
+          <Link
+            href="/billing"
+            className="text-sm text-orange-400 hover:text-orange-300 underline"
+          >
+            Verwalten
+          </Link>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6 text-red-400">

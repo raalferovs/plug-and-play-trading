@@ -65,6 +65,11 @@ export const authOptions: NextAuthOptions = {
           session.user.role = dbUser.role;
           session.user.avatarUrl = dbUser.avatarUrl;
           session.user.subscriptionStatus = dbUser.subscriptionStatus;
+          session.user.currentPeriodEnd =
+            dbUser.currentPeriodEnd?.toISOString() ?? null;
+          session.user.addonStatus = dbUser.addonStatus;
+          session.user.addonPeriodEnd =
+            dbUser.addonPeriodEnd?.toISOString() ?? null;
         }
       }
       return session;

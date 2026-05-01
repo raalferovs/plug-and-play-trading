@@ -65,6 +65,22 @@ export default function Navbar() {
               PRO
             </span>
           )}
+          {session.user.subscriptionStatus === "trialing" && (() => {
+            const end = session.user.currentPeriodEnd
+              ? new Date(session.user.currentPeriodEnd)
+              : null;
+            const daysLeft = end
+              ? Math.max(
+                  0,
+                  Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                )
+              : null;
+            return (
+              <span className="text-[10px] bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded font-medium hidden sm:block">
+                {daysLeft !== null ? `TRIAL · ${daysLeft}d` : "TRIAL"}
+              </span>
+            );
+          })()}
           <svg
             className={`w-4 h-4 text-gray-400 transition-transform ${
               dropdownOpen ? "rotate-180" : ""

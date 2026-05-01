@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireCopyTradingAccess } from "@/lib/subscription";
 import {
   updateCopier,
   stopAccount,
@@ -20,6 +21,9 @@ export async function PUT(
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const subError = await requireCopyTradingAccess(session.user.id);
+  if (subError) return subError;
 
   const account = await prisma.copyTradingAccount.findUnique({
     where: { id: params.id },
