@@ -10,7 +10,7 @@
 #property description "TriEdge EA"
 
 #include <Trade\Trade.mqh>
-#include "../include/Licensing.mqh"
+#include <Licensing.mqh>
 CTrade         Trade;
 CPositionInfo  posInfo;
 COrderInfo     ordInfo;

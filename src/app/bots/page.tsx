@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import ModuleRail from "@/components/ModuleRail";
 
-interface Bot {
+interface StaticBot {
   id: string;
   name: string;
   icon: string;
@@ -15,7 +17,21 @@ interface Bot {
   setupGuideText: string;
 }
 
-const bots: Bot[] = [
+interface DownloadableEa {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  icon: string;
+  latestVersion: {
+    version: string;
+    releasedAt: string;
+    fileSize: number;
+    releaseNotes: string;
+  } | null;
+}
+
+const staticBots: StaticBot[] = [
   {
     id: "copy-trading-ea",
     name: "Copy Trading EA",
@@ -32,6 +48,21 @@ const bots: Bot[] = [
 ];
 
 export default function BotsPage() {
+  const { data: session } = useSession();
+  const [eas, setEas] = useState<DownloadableEa[]>([]);
+
+  useEffect(() => {
+    fetch("/api/eas")
+      .then((r) => r.json())
+      .then((data) => setEas(Array.isArray(data) ? data : []))
+      .catch(() => setEas([]));
+  }, []);
+
+  const isPro =
+    session?.user.subscriptionStatus === "active" ||
+    session?.user.subscriptionStatus === "trialing" ||
+    session?.user.role === "admin";
+
   return (
     <div className="h-[calc(100vh-57px)] flex">
       <ModuleRail />
@@ -46,22 +77,19 @@ export default function BotsPage() {
           </div>
 
           <div className="space-y-6">
-            {bots.map((bot) => (
+            {/* Static bot cards (Copy Trading) */}
+            {staticBots.map((bot) => (
               <div
                 key={bot.id}
                 className="bg-midnight border border-midnight-light rounded-xl overflow-hidden"
               >
-                {/* Main card content */}
                 <div className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
-                    {/* Icon */}
                     <div className="flex-shrink-0">
                       <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-accent/20 to-midnight-light flex items-center justify-center text-5xl border border-midnight-light">
                         {bot.icon}
                       </div>
                     </div>
-
-                    {/* Content */}
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h2 className="text-xl font-semibold text-white">
@@ -73,7 +101,6 @@ export default function BotsPage() {
                           </span>
                         )}
                       </div>
-
                       <p className="text-sm text-gray-300 leading-relaxed mb-2">
                         {bot.description}
                       </p>
@@ -82,7 +109,6 @@ export default function BotsPage() {
                           {bot.secondaryDescription}
                         </p>
                       )}
-
                       <div className="flex items-center gap-3 mt-4">
                         <Link
                           href={bot.connectHref}
@@ -95,32 +121,16 @@ export default function BotsPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Setup guide footer */}
                 <div className="bg-midnight-dark border-t border-midnight-light px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full border border-midnight-light flex items-center justify-center text-gray-400">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">
-                        Setup guide
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {bot.setupGuideText}
-                      </p>
+                      <p className="text-sm font-semibold text-white">Setup guide</p>
+                      <p className="text-xs text-gray-500">{bot.setupGuideText}</p>
                     </div>
                   </div>
                   <button
@@ -129,6 +139,97 @@ export default function BotsPage() {
                   >
                     View setup guide
                   </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Dynamic downloadable EAs */}
+            {eas.map((ea) => (
+              <div
+                key={ea.id}
+                className="bg-midnight border border-midnight-light rounded-xl overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex-shrink-0">
+                      <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-accent/20 to-midnight-light flex items-center justify-center text-5xl border border-midnight-light">
+                        {ea.icon}
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h2 className="text-xl font-semibold text-white">
+                          {ea.name}
+                        </h2>
+                        {ea.latestVersion && (
+                          <span className="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded font-medium">
+                            v{ea.latestVersion.version}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-300 leading-relaxed mb-2">
+                        {ea.description}
+                      </p>
+                      {ea.latestVersion ? (
+                        <p className="text-xs text-gray-500 mb-4">
+                          Released{" "}
+                          {new Date(ea.latestVersion.releasedAt).toLocaleDateString([], {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                          {" · "}
+                          {(ea.latestVersion.fileSize / 1024).toFixed(1)} KB
+                        </p>
+                      ) : (
+                        <p className="text-xs text-gray-500 mb-4">
+                          Noch keine Version verfügbar — kommt bald.
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-3 mt-4">
+                        {!ea.latestVersion ? (
+                          <span className="text-sm text-gray-500">Coming soon</span>
+                        ) : isPro ? (
+                          <a
+                            href={`/api/eas/${ea.slug}/download`}
+                            className="inline-flex items-center gap-2 bg-accent text-black font-semibold px-5 py-2.5 rounded-lg hover:bg-accent-dim transition-colors text-sm"
+                          >
+                            Download EA v{ea.latestVersion.version}
+                            <span aria-hidden>↓</span>
+                          </a>
+                        ) : (
+                          <Link
+                            href="/billing"
+                            className="inline-flex items-center gap-2 bg-accent text-black font-semibold px-5 py-2.5 rounded-lg hover:bg-accent-dim transition-colors text-sm"
+                          >
+                            Subscribe to download
+                            <span aria-hidden>→</span>
+                          </Link>
+                        )}
+                      </div>
+
+                      {ea.latestVersion?.releaseNotes && (
+                        <details className="mt-4 text-xs text-gray-400">
+                          <summary className="cursor-pointer hover:text-gray-300">
+                            Release notes
+                          </summary>
+                          <p className="mt-2 whitespace-pre-wrap text-gray-500">
+                            {ea.latestVersion.releaseNotes}
+                          </p>
+                        </details>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-midnight-dark border-t border-midnight-light px-6 py-4">
+                  <p className="text-xs text-gray-500">
+                    EA muss in MetaTrader 5 hinzugefügt werden. License-Key findest du auf{" "}
+                    <Link href="/licenses" className="text-accent hover:underline">
+                      /licenses
+                    </Link>
+                    .
+                  </p>
                 </div>
               </div>
             ))}
